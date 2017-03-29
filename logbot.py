@@ -69,7 +69,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=["#excid3","#keryx"]
+CHANNELS=["#archlinux-ports"]
 NICK = "timber"
 NICK_PASS = ""
 
