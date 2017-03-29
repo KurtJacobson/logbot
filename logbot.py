@@ -74,7 +74,7 @@ NICK = "timber"
 NICK_PASS = ""
 
 # The local folder to save logs
-LOG_FOLDER = "logs"
+LOG_FOLDER = "/srv/arch-mirror/arch/arch/archlinux32/irc-logs"
 
 # The message returned when someone messages the bot
 HELP_MESSAGE = "Check out http://excid3.com"
