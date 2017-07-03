@@ -94,11 +94,11 @@ DEFAULT_TIMEZONE = 'UTC'
 default_format = {
     "help" : HELP_MESSAGE,
     "action" : '<span class="person" style="color:%color%">* %user% %message%</span>',
-    "join" : '-!- <span class="join">%user%</span> [%host%] has joined %channel%',
+    "join" : '-!- <span class="join">%user%</span> has joined %channel%',
     "kick" : '-!- <span class="kick">%user%</span> was kicked from %channel% by %kicker% [%reason%]',
     "mode" : '-!- mode/<span class="mode">%channel%</span> [%modes% %person%] by %giver%',
     "nick" : '<span class="nick">%old%</span> is now known as <span class="nick">%new%</span>',
-    "part" : '-!- <span class="part">%user%</span> [%host%] has parted %channel%',
+    "part" : '-!- <span class="part">%user%</span> has parted %channel%',
     "pubmsg" : '<span class="person" style="color:%color%">&lt;%user%&gt;</span> %message%',
     "pubnotice" : '<span class="notice">-%user%:%channel%-</span> %message%',
     "quit" : '-!- <span class="quit">%user%</span> has quit [%message%]',
