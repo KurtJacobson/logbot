@@ -77,7 +77,7 @@ NICK_PASS = ""
 LOG_FOLDER = "/srv/arch-mirror/arch/arch/archlinux32/irc-logs"
 
 # The message returned when someone messages the bot
-HELP_MESSAGE = "Check out http://excid3.com"
+HELP_MESSAGE = "What's up? I'm just the log bot."
 
 # FTP Configuration
 FTP_SERVER = ""
