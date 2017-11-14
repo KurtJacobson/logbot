@@ -231,7 +231,18 @@ class Logbot(SingleServerIRCBot):
         self.connection.disconnect("Quitting...")
 
     def color(self, user):
-        return "#%s" % md5(user).hexdigest()[:6]
+        hash = md5(user).hexdigest()
+        r = int(hash[0:2],16)
+        g = int(hash[2:4],16)
+        b = int(hash[4:6],16)
+        if r>127 and g>127 and b>127:
+            if int(hash[6:10],16) < 21845:
+                r = r-128
+            elif int(hash[6:10],16) < 43691:
+                g = g-128
+            else:
+                b = b-128
+        return "#%0.2x%0.2x%0.2x" % (r, g, b)
 
     def set_ftp(self, ftp=None):
         self.ftp = ftp
