@@ -38,7 +38,7 @@ import os
 import ftplib
 import sys
 import itertools
-from time import strftime
+from time import strftime,sleep
 try:
     from datetime import datetime
     from pytz import timezone
@@ -366,6 +366,7 @@ class Logbot(SingleServerIRCBot):
         """Join channels after successful connection"""
         if self.nick_pass:
           c.privmsg("nickserv", "identify %s" % self.nick_pass)
+          sleep(10)
 
         for chan in self.chans:
             c.join(chan)
