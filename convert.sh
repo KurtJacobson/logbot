@@ -77,6 +77,9 @@ sed '
   P
   D
 ' | \
+sed '
+  s@\(\s\)\(https\?://\S\+\)@\1<a href="\2" target="_blank">\2</a>@g
+' | \
 while read -r a b dummy c; do
   if [ "${dummy}" != '|' ]; then
     >&2 printf 'wrong dummy "%s"\n' "${dummy}"
