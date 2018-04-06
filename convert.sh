@@ -4,6 +4,26 @@ dir='/srv/arch-mirror/arch/arch/archlinux32/irc-logs/#archlinux-ports/'
 
 declare -A colors
 
+create_color() {
+  if [ -z "${colors["$1"]}" ]; then
+    colors["$1"]=$(
+      find "${dir}" -type f -name '*-*-*.html' -exec \
+        grep -h "style=\"color:#[0-9a-f]\{6\}\">&lt;$1&gt;" {} \; | \
+        sed 's@.* style="color:#\([0-9a-f]\{6\}\)">&lt;.*@\1@' | \
+        sort -u
+    )
+  fi
+  if [ -z "${colors["$1"]}" ]; then
+    colors["${b}"]=$(hexdump -n 4 -e '4/4 "%08X" 1 "\n"' /dev/urandom | head -c 6)
+#    >&2 printf 'unkown user "%s"\n' "$1"
+#    exit 42
+  fi
+  if [ $(echo "${colors["$1"]}" | wc -l) -ne 1 ]; then
+    >&2 printf 'user "%s" has multiple colors\n' "$1"
+    exit 42
+  fi
+}
+
 if [ "$1" = 'html' ]; then
   shift
   sed -n '
@@ -29,6 +49,11 @@ if [ "$1" = 'html' ]; then
         p
         d
       }
+      d
+    }
+    \@</font> <b>\*\*\*\S\+</b></font> @{
+      s@^<font color="#[0-9A-F]\{6\}"><font size="2">(\([^)]\+\))</font> <b>\*\*\*\(\S*\)</b></font> \(.*\)<br/>$@\1 * | \2 \3@
+      p
       d
     }
     /<font size="2">/{
@@ -82,23 +107,15 @@ while read -r a b dummy c; do
       "${time}" "${time}" "${time}" "${before}" "${after}"
     continue
   fi
-  if [ -z "${colors["${b}"]}" ]; then
-    colors["${b}"]=$(
-      find "${dir}" -type f -name '*-*-*.html' -exec \
-        grep -h "style=\"color:#[0-9a-f]\{6\}\">&lt;${b}&gt;" {} \; | \
-        sed 's@.* style="color:#\([0-9a-f]\{6\}\)">&lt;.*@\1@' | \
-        sort -u
-    )
+  if [ "${b}" = '*' ]; then
+    nick="${c%% *}"
+    action="${c#* }"
+    create_color "${nick}"
+    printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="person" style="color:#%s">* %s %s</span>\n<br />\n' \
+      "${time}" "${time}" "${time}" "${colors["${nick}"]}" "${nick}" "${action}"
+    continue
   fi
-  if [ -z "${colors["${b}"]}" ]; then
-    colors["${b}"]=$(hexdump -n 4 -e '4/4 "%08X" 1 "\n"' /dev/urandom | head -c 6)
-#    >&2 printf 'unkown user "%s"\n' "${b}"
-#    exit 42
-  fi
-  if [ $(echo "${colors["${b}"]}" | wc -l) -ne 1 ]; then
-    >&2 printf 'user "%s" has multiple colors\n' "${b}"
-    exit 42
-  fi
+  create_color "${b}"
   printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="person" style="color:#%s">&lt;%s&gt;</span> %s\n<br />\n' \
     "${time}" "${time}" "${time}" "${colors["${b}"]}" "${b}" "${c}"
 done
