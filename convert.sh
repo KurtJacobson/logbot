@@ -1,13 +1,13 @@
 #!/bin/bash
 
-dir='/srv/arch-mirror/arch/arch/archlinux32/irc-logs/#archlinux-ports/'
+dirs='/srv/arch-mirror/arch/arch/archlinux32/irc-logs/'
 
 declare -A colors
 
 create_color() {
   if [ -z "${colors["$1"]}" ]; then
     colors["$1"]=$(
-      find "${dir}" -type f -name '*-*-*.html' -exec \
+      find "${dirs}" -type f -name '*-*-*.html' -exec \
         grep -h "style=\"color:#[0-9a-f]\{6\}\">&lt;$1&gt;" {} \; | \
         sed 's@.* style="color:#\([0-9a-f]\{6\}\)">&lt;.*@\1@' | \
         sort -u
@@ -32,13 +32,28 @@ create_color() {
 # "time * | nick action"
 # we reformat other formats accordingly
 
-if [ "$1" = 'html' ]; then
+if [ "$1" = 'tyzoid' ]; then
+  shift
+  channel="$1"
+  shift
+  sed '
+    s/^\[\([^]]\+\)] \*\*\* Joins: \(\S\+\) .*$/\1 --> | \2 has joined '"${channel}"' /
+    t
+    s/^\[\([^]]\+\)] \*\*\* Quits: \(\S\+\) (\(.*\))$/\1 <-- | \2 has quit (\3)/
+    t
+    s/\[\([^]]\+\)] <\(\S\+\)> /\1 \2 | /
+    t
+    d
+  '
+elif [ "$1" = 'html' ]; then
+  shift
+  channel="$1"
   shift
   sed -n '
     /^<font size="2">/{
       s@^<font size="2">(\([^)]\+\))</font><b> @\1 @
       /entered the room\.<\/b><br\/>$/{
-        s@^\(\S\+\) \(.*\S\) \[.*] entered the room\.<\/b><br\/>$@\1 --> | \2 has joined #archlinux-ports @
+        s@^\(\S\+\) \(.*\S\) \[.*] entered the room\.<\/b><br\/>$@\1 --> | \2 has joined '"${channel}"' @
         p
         d
       }
@@ -74,9 +89,10 @@ if [ "$1" = 'html' ]; then
 else
   cat
 fi | \
+  sponge | \
   sed '
     s/([^()]*@[^()]*) //
-  '
+  ' | \
   sed '
     :a
       $!N
@@ -94,7 +110,7 @@ fi | \
       exit 42
     fi
     time=$(
-      date -d@$(($(date -d"${a}" +%s)+3600*$2)) +%T
+      date -d@$(($(date -d"${a}" +%s)+3600*$1)) +%T
     )
     if [ "${b}" = '-->' ]; then
       name="${c%% *}"
