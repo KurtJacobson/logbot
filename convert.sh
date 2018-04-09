@@ -24,6 +24,14 @@ create_color() {
   fi
 }
 
+# the desired format is:
+# "time nick | msg"
+# "time --> | nick ... channel"
+# "time <-- | nick ... (reason)"
+# "time -- | old-nick new-nick"
+# "time * | nick action"
+# we reformat other formats accordingly
+
 if [ "$1" = 'html' ]; then
   shift
   sed -n '
@@ -64,61 +72,61 @@ if [ "$1" = 'html' ]; then
     }
   '
 else
+  cat
+fi | \
   sed '
     s/([^()]*@[^()]*) //
   '
-  cat
-fi | \
-sed '
-  :a
-    $!N
-    s/\n\s\+ | / /
-    ta
-  P
-  D
-' | \
-sed '
-  s@\(\s\)\(https\?://\S\+\)@\1<a href="\2" target="_blank">\2</a>@g
-' | \
-while read -r a b dummy c; do
-  if [ "${dummy}" != '|' ]; then
-    >&2 printf 'wrong dummy "%s"\n' "${dummy}"
-    exit 42
-  fi
-  time=$(
-    date -d@$(($(date -d"${a}" +%s)+3600*$2)) +%T
-  )
-  if [ "${b}" = '-->' ]; then
-    name="${c%% *}"
-    channel="${c##* }"
-    printf '<a href="#%s" name="%s" class="time">[%s]</a> -!- <span class="join">%s</span> has joined %s\n<br />\n' \
-      "${time}"  "${time}" "${time}" "${name}" "${channel}"
-    continue
-  fi
-  if [ "${b}" = '<--' ]; then
-    name="${c%% *}"
-    reason="${c##* (}"
-    reason="${reason%)*}"
-    printf '<a href="#%s" name="%s" class="time">[%s]</a> -!- <span class="quit">%s</span> has quit [%s]\n<br />\n' \
-      "${time}"  "${time}" "${time}" "${name}" "${reason}"
-    continue
-  fi
-  if [ "${b}" = '--' ]; then
-    before="${c%% *}"
-    after="${c##* }"
-    printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="nick">%s</span> is now known as <span class="nick">%s</span>\n<br />\n' \
-      "${time}" "${time}" "${time}" "${before}" "${after}"
-    continue
-  fi
-  if [ "${b}" = '*' ]; then
-    nick="${c%% *}"
-    action="${c#* }"
-    create_color "${nick}"
-    printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="person" style="color:#%s">* %s %s</span>\n<br />\n' \
-      "${time}" "${time}" "${time}" "${colors["${nick}"]}" "${nick}" "${action}"
-    continue
-  fi
-  create_color "${b}"
-  printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="person" style="color:#%s">&lt;%s&gt;</span> %s\n<br />\n' \
-    "${time}" "${time}" "${time}" "${colors["${b}"]}" "${b}" "${c}"
-done
+  sed '
+    :a
+      $!N
+      s/\n\s\+ | / /
+      ta
+    P
+    D
+  ' | \
+  sed '
+    s@\(\s\)\(https\?://\S\+\)@\1<a href="\2" target="_blank">\2</a>@g
+  ' | \
+  while read -r a b dummy c; do
+    if [ "${dummy}" != '|' ]; then
+      >&2 printf 'wrong dummy "%s"\n' "${dummy}"
+      exit 42
+    fi
+    time=$(
+      date -d@$(($(date -d"${a}" +%s)+3600*$2)) +%T
+    )
+    if [ "${b}" = '-->' ]; then
+      name="${c%% *}"
+      channel="${c##* }"
+      printf '<a href="#%s" name="%s" class="time">[%s]</a> -!- <span class="join">%s</span> has joined %s\n<br />\n' \
+        "${time}"  "${time}" "${time}" "${name}" "${channel}"
+      continue
+    fi
+    if [ "${b}" = '<--' ]; then
+      name="${c%% *}"
+      reason="${c##* (}"
+      reason="${reason%)*}"
+      printf '<a href="#%s" name="%s" class="time">[%s]</a> -!- <span class="quit">%s</span> has quit [%s]\n<br />\n' \
+        "${time}"  "${time}" "${time}" "${name}" "${reason}"
+      continue
+    fi
+    if [ "${b}" = '--' ]; then
+      before="${c%% *}"
+      after="${c##* }"
+      printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="nick">%s</span> is now known as <span class="nick">%s</span>\n<br />\n' \
+        "${time}" "${time}" "${time}" "${before}" "${after}"
+      continue
+    fi
+    if [ "${b}" = '*' ]; then
+      nick="${c%% *}"
+      action="${c#* }"
+      create_color "${nick}"
+      printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="person" style="color:#%s">* %s %s</span>\n<br />\n' \
+        "${time}" "${time}" "${time}" "${colors["${nick}"]}" "${nick}" "${action}"
+      continue
+    fi
+    create_color "${b}"
+    printf '<a href="#%s" name="%s" class="time">[%s]</a> <span class="person" style="color:#%s">&lt;%s&gt;</span> %s\n<br />\n' \
+      "${time}" "${time}" "${time}" "${colors["${b}"]}" "${b}" "${c}"
+  done
