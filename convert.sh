@@ -32,7 +32,13 @@ create_color() {
 # "time * | nick action"
 # we reformat other formats accordingly
 
-if [ "$2" = 'tyzoid' ]; then
+if [ "$2" = 'ii' ]; then
+  sed '
+    s/^\([0-9]\+\) -!- \(.* has joined \S\+$\)/\1 --> | \2 /
+    s/^\([0-9]\+\) <\(\S\+\)> /\1 \2 | /
+    s/^/@/
+  '
+elif [ "$2" = 'tyzoid' ]; then
   channel="$3"
   sed '
     s/^\[\([^]]\+\)] \*\*\* Joins: \(\S\+\) .*$/\1 --> | \2 has joined '"${channel}"' /
