@@ -152,14 +152,12 @@ def append_line(filename, line):
     write_lines(filename, data)
 
 def write_lines(filename, lines):
-    f = open(filename, "wb")
-    f.writelines(lines)
-    f.close()
+    with open(filename, "wb") as f:
+        f.writelines(lines)
 
 def write_string(filename, string):
-    f = open(filename, "wb")
-    f.write(string)
-    f.close()
+    with open(filename, "wb") as f:
+        f.write(string)
 
 color_pattern = re.compile(r'(\[\d{1,2}m)')
 "Pattern that matches ANSI color codes and the text that follows"
