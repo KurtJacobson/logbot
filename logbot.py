@@ -40,7 +40,7 @@ import sys
 import itertools
 from time import strftime,sleep
 try:
-    from datetime import datetime
+    from datetime import datetime, date
     from pytz import timezone
 except: pass
 
@@ -69,12 +69,12 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=["#archlinux-ports"]
+CHANNELS=["#botwar"]
 NICK = "timber"
 NICK_PASS = ""
 
 # The local folder to save logs
-LOG_FOLDER = "/srv/arch-mirror/arch/arch/archlinux32/irc-logs"
+LOG_FOLDER = "logs"
 
 # The message returned when someone messages the bot
 HELP_MESSAGE = "What's up? I'm just the log bot."
@@ -420,7 +420,12 @@ class Logbot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         if e.arguments()[0].startswith(NICK):
-            c.privmsg(e.target(), self.format["help"])
+            source = e.source()
+            nick = source[:source.index("!")]
+            channel = e.target().replace('#', '%23')
+            today = date.today()
+            url = "http://example.com/irc-logs/{}/{}.html".format(channel, today)
+            c.privmsg(e.target(), nick + ": today's log: " + url)
         self.write_event("pubmsg", e)
 
     def on_pubnotice(self, c, e):
