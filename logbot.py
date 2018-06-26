@@ -80,7 +80,7 @@ LOG_FOLDER = "logs"
 LOG_BASE_URL = "http://example.com"
 
 # The message returned when someone messages the bot
-HELP_MESSAGE = "What's up? I'm just the log bot."
+HELP_MESSAGE = "What's up? I'm just the log bot..."
 
 # FTP Configuration
 FTP_SERVER = ""
@@ -324,39 +324,61 @@ class Logbot(SingleServerIRCBot):
         channel_title = channel
         channel = channel.lower()
 
-        # Create the channel path if necessary
-        chan_path = "%s/%s" % (LOG_FOLDER, channel)
-        if not os.path.exists(chan_path):
-            os.makedirs(chan_path)
+        # # Create the channel path if necessary
+        # chan_path = "%s/%s" % (LOG_FOLDER, channel)
+        # if not os.path.exists(chan_path):
+        #     os.makedirs(chan_path)
 
-            # Create channel index
-            write_string("%s/index.html" % chan_path, html_header.replace("%title%", "%s | Logs" % channel_title))
+        #     # Create channel index
+        #     write_string("%s/index.html" % chan_path, html_header.replace("%title%", "%s | Logs" % channel_title))
 
-            # Append channel to log index
-            append_line("%s/index.html" % LOG_FOLDER, '<a href="%s/index.html">%s</a>' % (channel.replace("#", "%23"), channel_title))
+        #     # Append channel to log index
+        #     append_line("%s/index.html" % LOG_FOLDER, '<a href="%s/index.html">%s</a>' % (channel.replace("#", "%23"), channel_title))
 
         # Current log
         try:
             localtime = datetime.now(timezone(self.channel_locations.get(channel,DEFAULT_TIMEZONE)))
-            time = localtime.strftime("%H:%M:%S")
-            date = localtime.strftime("%Y-%m-%d")
+            t = localtime.strftime
         except:
-            time = strftime("%H:%M:%S")
-            date = strftime("%Y-%m-%d")
+            t = strftime
 
-        log_path = "%s/%s/%s.html" % (LOG_FOLDER, channel, date)
+        time = t("%H:%M:%S")
+        date = t("%Y-%m-%d")
+        year, month, day = date.split('-')
 
-        # Create the log date index if it doesnt exist
-        if not os.path.exists(log_path):
-            write_string(log_path, html_header.replace("%title%", "%s | Logs for %s" % (channel_title, date)))
+        chan_dir = "%s/%s/" % (LOG_FOLDER, channel)
+        if not os.path.exists(chan_dir):
+            os.makedirs(chan_dir)
+            # Create year index
+            write_string("%s/index.html" % chan_dir, html_header.replace("%title%", "%s | Logs by year" % channel_title))
+            # Append channel to channel index
+            append_line("%s/index.html" % LOG_FOLDER, '<a href="%s/index.html">%s</a>' % (channel.replace("#", "%23"), channel_title))
 
-            # Append date log
-            append_line("%s/index.html" % chan_path, '<a href="%s.html">%s</a>' % (date, date))
+        year_dir = os.path.join(chan_dir, year)
+        if not os.path.exists(year_dir):
+            os.makedirs(year_dir)
+            # Create month index
+            write_string("%s/index.html" % year_dir, html_header.replace("%title%", "%s | %s Logs by month" % (channel_title, year)))
+            # Append year to year index
+            append_line("%s/index.html" % chan_dir, '<a href="%s/index.html">%s</a>' % (year, year))
+
+        month_dir = os.path.join(year_dir, month)
+        if not os.path.exists(month_dir):
+            os.makedirs(month_dir)
+            # Create day index
+            write_string("%s/index.html" % month_dir, html_header.replace("%title%", "%s | %s Logs by day" % (channel_title, t('%b %Y'))) )
+            # Append month to month index
+            append_line("%s/index.html" % year_dir, '<a href="%s/index.html">%s</a>' % (month, t('%m - %b')))
+
+        day_log = os.path.join(month_dir, '%s.html' % day)
+        if not os.path.exists(day_log):
+            write_string(day_log, html_header.replace("%title%", "%s | Logs for %s" % (channel_title, date)))
+            # Append day to day index
+            append_line("%s/index.html" % month_dir, '<a href="%s.html">%s</a>' % (day, t('%d - %a')))
 
         # Append current message
-        message = "<a href=\"#%s\" name=\"%s\" class=\"time\">[%s]</a> %s" % \
-                                          (time, time, time, msg)
-        append_line(log_path, message)
+        message = "<a href=\"#%s\" name=\"%s\" class=\"time\">[%s]</a> %s" % (time, time, time, msg)
+        append_line(day_log, message)
 
     ### These are the IRC events
 
@@ -424,7 +446,7 @@ class Logbot(SingleServerIRCBot):
         if e.arguments()[0].startswith(NICK):
             nick = nm_to_n(e.source())
             channel = e.target().replace('#', '%23')
-            today = date.today()
+            today = date.today().strftime('%Y/%m/%d')
             url = "%s/%s/%s.html" % (LOG_BASE_URL, channel, today)
             c.privmsg(e.target(), "%s: today's log: %s" % (nick, url))
         self.write_event("pubmsg", e)
@@ -464,7 +486,7 @@ def main():
     # Create the logs directory
     if not os.path.exists(LOG_FOLDER):
         os.makedirs(LOG_FOLDER)
-        write_string("%s/index.html" % LOG_FOLDER, html_header.replace("%title%", "Chat Logs"))
+        write_string("%s/index.html" % LOG_FOLDER, html_header.replace("%title%", "IRC Logs by Channel"))
 
     # Start the bot
     bot = Logbot(SERVER, PORT, SERVER_PASS, CHANNELS, NICK, NICK_PASS)
