@@ -76,6 +76,9 @@ NICK_PASS = ""
 # The local folder to save logs
 LOG_FOLDER = "logs"
 
+# The base URL for the logs
+LOG_BASE_URL = "http://example.com"
+
 # The message returned when someone messages the bot
 HELP_MESSAGE = "What's up? I'm just the log bot."
 
@@ -420,12 +423,11 @@ class Logbot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         if e.arguments()[0].startswith(NICK):
-            source = e.source()
-            nick = source[:source.index("!")]
+            nick = nm_to_n(e.source())
             channel = e.target().replace('#', '%23')
             today = date.today()
-            url = "http://example.com/irc-logs/{}/{}.html".format(channel, today)
-            c.privmsg(e.target(), nick + ": today's log: " + url)
+            url = "%s/%s/%s.html" % (LOG_BASE_URL, channel, today)
+            c.privmsg(e.target(), "%s: today's log: %s" % (nick, url))
         self.write_event("pubmsg", e)
 
     def on_pubnotice(self, c, e):
